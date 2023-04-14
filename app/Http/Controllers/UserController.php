@@ -8,25 +8,25 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    protected $model;
+
+    public function __construct(User $user)
+    {
+        $this->model = $user;
+    }
+
     public function index(Request $request)
     {
         $search = $request->search;
 
-        $users = User::where(
-            function ($query) use ($search) {
-                if ($search) {
-                    $query->where('email', $search);
-                    $query->orWhere('name', 'LIKE', "%{$search}%");
-                }
-            }
-        )->get();
+        $users = $this->model->getUsers(search: $request->search);
 
         return view('users.index', compact('users'));
     }
 
     public function show($id)
     {
-        $user = User::where('id', $id)->first();
+        $user = $this->model->where('id', $id)->first();
 
         if (!$user) {
             return redirect()->route('users.index');
@@ -45,14 +45,14 @@ class UserController extends Controller
         $data = $request->all();
         $data['password'] = bcrypt($request->password);
 
-        User::create($data);
+        $this->model->create($data);
 
         return redirect()->route('users.index');
     }
 
     public function edit($id)
     {
-        $user = User::where('id', $id)->first();
+        $user = $this->model->where('id', $id)->first();
 
         if (!$user) {
             return redirect()->route('users.index');
@@ -63,7 +63,7 @@ class UserController extends Controller
 
     public function update(StoreUpdateUserFormRequest $request, $id)
     {
-        $user = User::where('id', $id)->first();
+        $user = $this->model->where('id', $id)->first();
 
         if (!$user) {
             return redirect()->route('users.index');
@@ -82,7 +82,7 @@ class UserController extends Controller
 
     public function destroy($id)
     {
-        $user = User::where('id', $id)->first();
+        $user = $this->model->where('id', $id)->first();
 
         if (!$user) {
             return redirect()->route('users.index');
